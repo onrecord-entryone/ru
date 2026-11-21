@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0d0b0e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>入</title>
+<style>
+:root{--bg:#0d0b0e;--ink:#e8e2dc;--dim:#8a8078;--line:#241f26;--red:#a8323c;--warm:#c9a227;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"Songti SC","STSong","Noto Serif SC",serif;font-size:17px;line-height:1.8;
+padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 36px);
+max-width:560px;margin:0 auto;-webkit-text-size-adjust:100%}
+.s{display:none;animation:f .35s ease}.s.on{display:block}
+@keyframes f{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:25px;font-weight:400;letter-spacing:.4em;margin:0 0 4px}
+p{margin:0 0 12px}
+.w{color:var(--dim);font-size:13.5px;letter-spacing:.05em}
+.c{text-align:center}
+.big{font-size:21px;line-height:1.95;letter-spacing:.12em}
+hr{border:none;height:1px;background:var(--line);margin:22px 0}
+button{width:100%;padding:14px 16px;margin:7px 0;background:transparent;color:var(--ink);
+border:1px solid var(--line);border-radius:2px;font-family:inherit;font-size:16px;
+letter-spacing:.06em;text-align:left;transition:.15s}
+button:active{background:#1b161d}
+button.sel{border-color:var(--red);color:#fff;background:#1a1114}
+button.go{border-color:var(--red);color:#fff;letter-spacing:.28em;text-align:center;padding:16px;margin-top:22px}
+button.q{border:none;color:var(--dim);text-align:center;font-size:13.5px;letter-spacing:.2em;margin-top:12px}
+input[type=text]{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);
+color:var(--ink);font-family:inherit;font-size:18px;padding:10px 0;letter-spacing:.1em;text-align:center;margin-top:8px}
+input[type=text]:focus{outline:none;border-color:var(--red)}
+.paper{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.paper .n{color:var(--red);font-size:12px;letter-spacing:.25em;flex:0 0 auto}
+.paper .t{flex:1}
+.paper .m{color:var(--dim);font-size:12px;flex:0 0 auto}
+.done{border-color:#2c3a2c}
+.bar{height:1px;background:var(--line);margin:16px 0}
+.seal{border:1px solid var(--red);padding:20px;margin:16px 0;text-align:center;letter-spacing:.4em;color:var(--red);font-size:14px}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px;line-height:1.7}
+.box{flex:0 0 auto;width:20px;height:20px;border:1px solid var(--line);margin-top:3px;border-radius:1px}
+.chk.on .box{border-color:var(--red);background:var(--red)}
+h2{font-size:16px;font-weight:400;letter-spacing:.2em;margin:26px 0 8px;color:var(--ink)}
+h2 span{color:var(--dim);font-size:12px;letter-spacing:.1em;margin-left:8px}
+</style>
+</head>
+<body>
+
+<!-- 首页 -->
+<section id="s-home" class="s on">
+  <div style="height:8vh"></div>
+  <h1 class="c">入</h1>
+  <p class="c w" id="home-no">还没有编号</p>
+  <hr>
+  <div id="combo"></div>
+  <div class="bar"></div>
+  <p class="w">十五卷</p>
+  <div id="papers"></div>
+  <div class="bar"></div>
+  <button onclick="openContract()">契 约</button>
+  <button onclick="exportJSON()">导出这一份</button>
+  <button class="q" onclick="wipe()">全部清掉</button>
+</section>
+
+<!-- 答题 -->
+<section id="s-quiz" class="s">
+  <div class="paper" style="margin-bottom:14px">
+    <span class="n" id="q-no">卷一</span>
+    <span class="m" id="q-prog">1 / 18</span>
+  </div>
+  <p class="big" id="q-text" style="margin:18px 0 24px"></p>
+  <div id="q-opts"></div>
+  <button class="q" id="q-next" style="display:none" onclick="nextQ()">下 一 题</button>
+  <button class="q" onclick="backHome()">回去</button>
+</section>
+
+<!-- 契约 -->
+<section id="s-contract" class="s">
+  <p class="w">契约</p>
+  <p class="big" style="margin-top:14px">看完，再签。</p>
+  <p class="w">只勾你要的。勾了才生效，没勾等于没写。</p>
+  <div id="contract"></div>
+  <hr>
+  <p class="w c">写下你的代号</p>
+  <input type="text" id="sig" placeholder="代号" autocomplete="off">
+  <button class="go" onclick="signIt()">签</button>
+  <button class="q" onclick="backHome()">回去</button>
+</section>
+
+<!-- 完成 -->
+<section id="s-done" class="s">
+  <div style="height:12vh"></div>
+  <p class="c w">编号</p>
+  <p class="c big" id="d-no" style="letter-spacing:.5em;color:var(--warm);font-size:26px"></p>
+  <div class="seal">已 入</div>
+  <p class="c w" id="d-sig"></p>
+  <div style="height:8vh"></div>
+  <p class="c w" id="d-words">「记住今晚。」</p>
+  <hr>
+  <button onclick="exportJSON()">导出这一份（发给电脑）</button>
+  <button class="q" onclick="backHome()">回去</button>
+</section>
+
+<script>
+const D = {"q":[{"id":"q001","group":"边界","q":"脖子侧面被人碰一下","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态｜最省力"},{"id":"q002","group":"边界","q":"手腕被一只手攥住","opts":["0 别碰","1 轻轻可以","2 一般","3 有点想要","4 就想被攥紧"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q003","group":"边界","q":"眼睛被蒙住","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q004","group":"边界","q":"耳朵被吹气或被轻轻咬","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q005","group":"边界","q":"大腿内侧被碰","opts":["0 别碰","1 只能轻轻","2 一般","3 想要","4 非常想"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q006","group":"边界","q":"腰被一只手掐住","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q007","group":"边界","q":"头发被抓住往后拉","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q008","group":"边界","q":"被命令“跪下”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q009","group":"边界","q":"双手被绑在身前","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q010","group":"边界","q":"双手被绑在身后","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q011","group":"边界","q":"脚踝被绑住","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q012","group":"边界","q":"嘴里被塞东西，说不出话","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q013","group":"边界","q":"屁股被打","opts":["0 一点都不想","1 一两下可以","2 一般","3 想要","4 越重越好"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q014","group":"边界","q":"脖子被轻轻掐住","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q015","group":"边界","q":"身上留下印子（吻痕、齿痕、绳痕）","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q016","group":"边界","q":"被拍下来或录下来","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q017","group":"边界","q":"被第三个人知道这件事","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q018","group":"边界","q":"在宿舍里被要求做事","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q019","group":"称呼与语言","q":"被叫“小狗”","opts":["0 别叫","1 不太行","2 无所谓","3 有点喜欢","4 就想被这么叫"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q020","group":"称呼与语言","q":"被叫“乖孩子”","opts":["0 别叫","1 不太行","2 无所谓","3 有点喜欢","4 很想听"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q021","group":"称呼与语言","q":"被叫“宝贝”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q022","group":"称呼与语言","q":"被叫“奴”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q023","group":"称呼与语言","q":"被叫“骚”这一类词","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q024","group":"称呼与语言","q":"你要怎么称呼对方","opts":["主人","姐姐","妈妈","叫名字","哥","还没想好"],"multi":false,"kind":"single","note":"单选，后面可改"},{"id":"q025","group":"称呼与语言","q":"说到自己的时候用哪个词","opts":["我","小狗","奴","自己的名字","看当时心情"],"multi":false,"kind":"single","note":"单选"},{"id":"q026","group":"称呼与语言","q":"每句话后面都要加一句“谢谢”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q027","group":"称呼与语言","q":"把刚听到的指令复述一遍","opts":["0 不想复述","1 偶尔可以","2 一般","3 可以","4 每次都复述"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q028","group":"称呼与语言","q":"被骂“笨”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q029","group":"称呼与语言","q":"被夸“做得很好”","opts":["0 没感觉","1 有点别扭","2 一般","3 高兴","4 会记很久"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q030","group":"称呼与语言","q":"被要求说清楚“哪里舒服”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q031","group":"称呼与语言","q":"被要求报告身体哪里热、哪里紧","opts":["0 说不出口","1 勉强能说","2 一般","3 能说","4 说得越细越好"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q032","group":"称呼与语言","q":"用第三人称说自己的事（“小狗今天……”）","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q033","group":"称呼与语言","q":"做什么之前都要先开口请求","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q034","group":"称呼与语言","q":"被叫全名","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q035","group":"身体现状","q":"昨晚睡了几个小时","opts":["不到 4","4–5","6–7","8 以上","记不清"],"multi":false,"kind":"single","note":"每日卷用"},{"id":"q036","group":"身体现状","q":"早上起来身体什么感觉","opts":["轻","沉","酸","发冷","说不清"],"multi":false,"kind":"single","note":"单选"},{"id":"q037","group":"身体现状","q":"今天有没有自己碰过","opts":["没有","一次","两三次","记不清"],"multi":false,"kind":"single","note":"单选"},{"id":"q038","group":"身体现状","q":"最近一次释放是","opts":["今天","昨天","两三天前","一周以上","记不清"],"multi":false,"kind":"single","note":"单选"},{"id":"q039","group":"身体现状","q":"今天洗过澡了吗","opts":["洗了","只冲了一下","没有","晚上再洗"],"multi":false,"kind":"single","note":"单选"},{"id":"q040","group":"身体现状","q":"今天穿的内裤","opts":["平常的","换了一条好的","没穿","不想说"],"multi":false,"kind":"single","note":"单选"},{"id":"q041","group":"身体现状","q":"现在身上有印子吗","opts":["没有","有一点","有几处","不想看"],"multi":false,"kind":"single","note":"单选"},{"id":"q042","group":"身体现状","q":"今天最想被碰的地方","opts":["脖子","耳朵","胸口","腰","大腿内侧","后面"],"multi":true,"kind":"multi","note":"多选，最多 2 个"},{"id":"q043","group":"身体现状","q":"今天最不想被碰的地方","opts":["脖子","耳朵","胸口","腰","大腿内侧","后面"],"multi":true,"kind":"multi","note":"多选"},{"id":"q044","group":"身体现状","q":"今天精力","opts":["0 起不来","1 很低","2 一般","3 还行","4 很足"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q045","group":"身体现状","q":"今天心情","opts":["0 很差","1 有点低","2 一般","3 不错","4 很好"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q046","group":"身体现状","q":"今天吃饭了吗","opts":["正常吃了","只吃了一顿","还没吃","吃了但不舒服"],"multi":false,"kind":"single","note":"单选"},{"id":"q047","group":"身体现状","q":"今天喝了多少水","opts":["很少","两三杯","正常","很多"],"multi":false,"kind":"single","note":"单选"},{"id":"q048","group":"身体现状","q":"今天有没有一直憋着","opts":["没有","有一点","一直","不想说"],"multi":false,"kind":"single","note":"单选"},{"id":"q049","group":"身体现状","q":"今天身体哪里最紧","opts":["肩","腰","腿","小腹","说不清"],"multi":false,"kind":"single","note":"单选"},{"id":"q050","group":"身体现状","q":"今天有没有照镜子看自己","opts":["看了，还行","看了，不太想","没看","不想看"],"multi":false,"kind":"single","note":"单选"},{"id":"q051","group":"身体现状","q":"今天有多想被管","opts":["0 一点不想","1 不太想","2 一般","3 有点想","4 很想"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q052","group":"身体现状","q":"今天最想要的是","opts":["被碰","被夸","被骂","被放着不管","不知道"],"multi":false,"kind":"single","note":"单选"},{"id":"q053","group":"器具与道具","q":"眼罩","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q054","group":"器具与道具","q":"绳子","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q055","group":"器具与道具","q":"手铐","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q056","group":"器具与道具","q":"乳夹或衣夹","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q057","group":"器具与道具","q":"低温蜡烛","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q058","group":"器具与道具","q":"拍子或皮带","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q059","group":"器具与道具","q":"会震的东西","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q060","group":"器具与道具","q":"后面用的塞子","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q061","group":"器具与道具","q":"口塞","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q062","group":"器具与道具","q":"项圈","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q063","group":"器具与道具","q":"一面能看见自己的镜子","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q064","group":"器具与道具","q":"冰块","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q065","group":"器具与道具","q":"羽毛或软刷","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q066","group":"器具与道具","q":"计时器","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q067","group":"器具与道具","q":"用手机拍下来","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q068","group":"器具与道具","q":"润滑","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q069","group":"器具与道具","q":"只用手指","opts":["0 不想","1 偶尔","2 一般","3 可以","4 就够用了"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q070","group":"器具与道具","q":"这些东西要自己买吗","opts":["愿意自己买","想让人送","只用现成的","暂时不买"],"multi":false,"kind":"single","note":"单选"},{"id":"q071","group":"场景与环境","q":"宿舍床上","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q072","group":"场景与环境","q":"宿舍浴室","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q073","group":"场景与环境","q":"空教室","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q074","group":"场景与环境","q":"图书馆隔间","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q075","group":"场景与环境","q":"深夜的宿舍走廊","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q076","group":"场景与环境","q":"白天拉上窗帘","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q077","group":"场景与环境","q":"全黑，什么都看不见","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q078","group":"场景与环境","q":"开着灯","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q079","group":"场景与环境","q":"面前有一面镜子","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q080","group":"场景与环境","q":"放着音乐","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q081","group":"场景与环境","q":"安静到能听见自己喘气","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q082","group":"场景与环境","q":"门外有人在走动","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q083","group":"场景与环境","q":"被窝里","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q084","group":"场景与环境","q":"站着","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q085","group":"场景与环境","q":"跪着","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q086","group":"场景与环境","q":"趴着","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q087","group":"关系结构","q":"现在你想要的关系是","opts":["自己一个人弄","线上有人管着","线下有人在旁边","都可以","还没想好"],"multi":false,"kind":"single","note":"单选"},{"id":"q088","group":"关系结构","q":"你希望对方多大","opts":["和我差不多","大几岁","大很多","比我小","不重要"],"multi":false,"kind":"single","note":"单选"},{"id":"q089","group":"关系结构","q":"你希望对方是","opts":["女生","男生","都可以","不确定"],"multi":false,"kind":"single","note":"单选"},{"id":"q090","group":"关系结构","q":"每天联系几次","opts":["早中晚各一次","一天一次","几天一次","随缘"],"multi":false,"kind":"single","note":"单选"},{"id":"q091","group":"关系结构","q":"对方安排你几点睡几点起","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q092","group":"关系结构","q":"对方看你的手机","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q093","group":"关系结构","q":"对方规定你穿什么","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q094","group":"关系结构","q":"对方规定你吃什么","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q095","group":"关系结构","q":"对方规定你什么时候可以释放","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q096","group":"关系结构","q":"每次都要记下来给对方看","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q097","group":"关系结构","q":"做错要罚","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q098","group":"关系结构","q":"做对要奖","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q099","group":"关系结构","q":"这件事只有你们两个人知道","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q100","group":"关系结构","q":"只许有对方一个人","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q101","group":"关系结构","q":"你随时可以退出","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q102","group":"关系结构","q":"这一段你想要多长","opts":["先试一周","一个月","一个学期","长期","没想过"],"multi":false,"kind":"single","note":"单选"},{"id":"q103","group":"强度与节奏","q":"疼的程度","opts":["0 一点都不要","1 轻轻就好","2 适中","3 有点重","4 越重越好"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q104","group":"强度与节奏","q":"羞的程度","opts":["0 一点也不","1 一点点","2 适中","3 挺想","4 越羞越好"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q105","group":"强度与节奏","q":"被管着的程度","opts":["0 别管我","1 偶尔管","2 一般","3 多管一点","4 全都管"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q106","group":"强度与节奏","q":"节奏","opts":["慢慢来","快一点","一段快一段慢","全听对方的"],"multi":false,"kind":"single","note":"单选"},{"id":"q107","group":"强度与节奏","q":"一次多久","opts":["十分钟以内","半小时","一小时","到没力气","看情况"],"multi":false,"kind":"single","note":"单选"},{"id":"q108","group":"强度与节奏","q":"一次想要几次","opts":["一次","两三次","越多越好","不许有"],"multi":false,"kind":"single","note":"单选"},{"id":"q109","group":"强度与节奏","q":"中途叫停，停了就真停","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q110","group":"强度与节奏","q":"被弄到哭","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q111","group":"强度与节奏","q":"被弄到脑子一片空白","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q112","group":"强度与节奏","q":"第二天身上还有感觉","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q113","group":"强度与节奏","q":"被推到极限","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q114","group":"强度与节奏","q":"提前告诉你，还是突然来","opts":["先说好","突然来","一半一半","都行"],"multi":false,"kind":"single","note":"单选"},{"id":"q115","group":"强度与节奏","q":"被要求数出来","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q116","group":"强度与节奏","q":"倒计时数到最后","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q117","group":"强度与节奏","q":"被问“还要吗”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q118","group":"强度与节奏","q":"结束之后","opts":["马上想被抱","想自己待一会","想说话","想睡"],"multi":false,"kind":"single","note":"单选"},{"id":"q119","group":"强度与节奏","q":"被要求不许出声","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q120","group":"强度与节奏","q":"被要求一直看着对方","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q121","group":"频率与日程","q":"想要的频率","opts":["每天","一周三四次","一周一两次","想到了再说"],"multi":false,"kind":"single","note":"单选"},{"id":"q122","group":"频率与日程","q":"固定在同一个时间","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q123","group":"频率与日程","q":"早上还是晚上","opts":["早上","中午","晚上","深夜","不固定"],"multi":false,"kind":"single","note":"单选"},{"id":"q124","group":"频率与日程","q":"宿舍有人在的时候能不能做","opts":["能","不能","看情况"],"multi":false,"kind":"tri","note":"三态"},{"id":"q125","group":"频率与日程","q":"一周能空出几天","opts":["一天","两三天","四五天","每天"],"multi":false,"kind":"single","note":"单选"},{"id":"q126","group":"频率与日程","q":"每次能空出多久","opts":["十分钟","半小时","一小时","两小时以上"],"multi":false,"kind":"single","note":"单选"},{"id":"q127","group":"频率与日程","q":"愿意为这个早起","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q128","group":"频率与日程","q":"愿意为这个晚睡","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q129","group":"频率与日程","q":"考试周停不停","opts":["停","不停","减半"],"multi":false,"kind":"tri","note":"三态"},{"id":"q130","group":"频率与日程","q":"身体不舒服时停不停","opts":["停","不停","看多不舒服"],"multi":false,"kind":"tri","note":"三态"},{"id":"q131","group":"频率与日程","q":"每天打卡","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q132","group":"频率与日程","q":"打卡方式","opts":["发一句话","发一张图","发语音","自己记着"],"multi":false,"kind":"single","note":"单选"},{"id":"q133","group":"频率与日程","q":"每周写一次总结","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q134","group":"频率与日程","q":"每月复盘一次","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q135","group":"频率与日程","q":"忘了做怎么办","opts":["补上","跳过","记一笔","认罚"],"multi":false,"kind":"single","note":"单选"},{"id":"q136","group":"频率与日程","q":"每天有人提醒你一下","opts":["0 别提醒","1 偶尔","2 一般","3 想","4 非常想"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q137","group":"频率与日程","q":"连续做满一周想要什么","opts":["被夸","加任务","放一天假","一个小奖励"],"multi":false,"kind":"single","note":"单选"},{"id":"q138","group":"事后照顾","q":"结束之后第一件事","opts":["洗澡","躺着不动","看手机","找人说话","直接睡"],"multi":false,"kind":"single","note":"单选"},{"id":"q139","group":"事后照顾","q":"结束之后想听到什么","opts":["夸我","说辛苦了","说我是他的","问我还好吗","什么都不说","让我自己待着"],"multi":true,"kind":"multi","note":"多选，最多 2 个"},{"id":"q140","group":"事后照顾","q":"结束之后想被碰哪里","opts":["头发","背","手","肚子","哪里都别碰"],"multi":true,"kind":"multi","note":"多选"},{"id":"q141","group":"事后照顾","q":"结束之后想自己待多久","opts":["马上要人陪","十分钟","半小时","一小时以上"],"multi":false,"kind":"single","note":"单选"},{"id":"q142","group":"事后照顾","q":"结束之后会想哭","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q143","group":"事后照顾","q":"结束之后会觉得羞","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q144","group":"事后照顾","q":"结束之后会后悔","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q145","group":"事后照顾","q":"结束之后想吃东西","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q146","group":"事后照顾","q":"结束之后想洗澡","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q147","group":"事后照顾","q":"结束之后想被抱着","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q148","group":"事后照顾","q":"结束之后想说话","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q149","group":"事后照顾","q":"结束之后想被夸","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q150","group":"事后照顾","q":"结束之后要检查一下身体","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q151","group":"事后照顾","q":"第二天需要有人问一句","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q152","group":"事后照顾","q":"事后最怕什么","opts":["被丢下","被嫌脏","被说太过了","被当成笑话","没人管"],"multi":true,"kind":"multi","note":"多选"},{"id":"q153","group":"事后照顾","q":"事后最需要什么","opts":["水","被子","洗澡","有人在","安静","吃点东西"],"multi":true,"kind":"multi","note":"多选，最多 3 个"},{"id":"q154","group":"心理与情绪","q":"被管着的感觉","opts":["0 难受","1 有点别扭","2 一般","3 舒服","4 很安心"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q155","group":"心理与情绪","q":"被放着不管的感觉","opts":["0 很好","1 还行","2 一般","3 有点空","4 很难受"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q156","group":"心理与情绪","q":"被夸的时候","opts":["0 没感觉","1 有点别扭","2 一般","3 高兴","4 会记很久"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q157","group":"心理与情绪","q":"被忽略的时候","opts":["0 无所谓","1 一点点","2 一般","3 会难过","4 会很难受"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q158","group":"心理与情绪","q":"做错被指出来","opts":["想解释","想道歉","想躲","想被罚","不说话"],"multi":false,"kind":"single","note":"单选"},{"id":"q159","group":"心理与情绪","q":"想做又不敢说","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q160","group":"心理与情绪","q":"会偷偷违反一下规则","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q161","group":"心理与情绪","q":"希望被看穿","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q162","group":"心理与情绪","q":"一个人的时候会想这些","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q163","group":"心理与情绪","q":"会因为这些分心","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q164","group":"心理与情绪","q":"会觉得羞","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q165","group":"心理与情绪","q":"会觉得安心","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q166","group":"心理与情绪","q":"会觉得自由","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q167","group":"心理与情绪","q":"会觉得被在意","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q168","group":"心理与情绪","q":"想被罚","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q169","group":"心理与情绪","q":"想被夸","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q170","group":"心理与情绪","q":"想被记住","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q171","group":"心理与情绪","q":"想被忘掉一会儿","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q172","group":"记录与规则","q":"被记下来的感觉","opts":["0 别扭","1 有点怪","2 一般","3 踏实","4 很喜欢"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q173","group":"记录与规则","q":"想不想被记录","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q174","group":"记录与规则","q":"记录什么","opts":["做了几次","做了多久","身体反应","当时的想法","照片","语音"],"multi":true,"kind":"multi","note":"多选"},{"id":"q175","group":"记录与规则","q":"记录给谁看","opts":["只给自己","给对方看","给固定的人","不发出去"],"multi":false,"kind":"single","note":"单选"},{"id":"q176","group":"记录与规则","q":"多久记一次","opts":["每天","每次","每周","想记就记"],"multi":false,"kind":"single","note":"单选"},{"id":"q177","group":"记录与规则","q":"要不要写感受","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q178","group":"记录与规则","q":"要不要拍照留下来","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q179","group":"记录与规则","q":"要不要截图为证","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q180","group":"记录与规则","q":"要不要给每次编号","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q181","group":"记录与规则","q":"要不要给自己起个代号","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q182","group":"记录与规则","q":"规则要几条","opts":["三条以内","五条左右","十条","越多越好"],"multi":false,"kind":"single","note":"单选"},{"id":"q183","group":"记录与规则","q":"规则要多细","opts":["一句话一条","写清楚怎么做","细到几点几分","看情况"],"multi":false,"kind":"single","note":"单选"},{"id":"q184","group":"记录与规则","q":"违反了怎么处理","opts":["说一声","记一笔","当场罚","攒着一起算"],"multi":false,"kind":"single","note":"单选"},{"id":"q185","group":"记录与规则","q":"规则多久改一次","opts":["每周","每月","出问题就改","不改"],"multi":false,"kind":"single","note":"单选"},{"id":"q186","group":"记录与规则","q":"规则谁来定","opts":["对方定","一起定","我提对方改","我先写"],"multi":false,"kind":"single","note":"单选"},{"id":"q187","group":"记录与规则","q":"要不要写下来签名","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q188","group":"记录与规则","q":"要不要贴在看得见的地方","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q189","group":"仪式与奖惩","q":"开始之前要不要一个仪式","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q190","group":"仪式与奖惩","q":"仪式里有什么","opts":["跪下","说一句开场的话","报今天的状态","复述规则","点香或关灯","计时开始"],"multi":true,"kind":"multi","note":"多选"},{"id":"q191","group":"仪式与奖惩","q":"要不要跪着开始","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q192","group":"仪式与奖惩","q":"要不要报数","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q193","group":"仪式与奖惩","q":"开始前先复述一遍规则","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q194","group":"仪式与奖惩","q":"说一句固定的开场词","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q195","group":"仪式与奖惩","q":"用计时器","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q196","group":"仪式与奖惩","q":"结束说一句收尾的话","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q197","group":"仪式与奖惩","q":"留一个记号（盖章、写日期）","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q198","group":"仪式与奖惩","q":"惩罚方式","opts":["不许释放","罚站","罚跪","打几下","写检讨","多做一个任务"],"multi":true,"kind":"multi","note":"多选"},{"id":"q199","group":"仪式与奖惩","q":"奖励方式","opts":["被夸","可以释放","放一天假","收到一句话","一个小东西"],"multi":true,"kind":"multi","note":"多选"},{"id":"q200","group":"仪式与奖惩","q":"惩罚要提前说","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q201","group":"仪式与奖惩","q":"奖励要马上给","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q202","group":"仪式与奖惩","q":"积分制","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q203","group":"仪式与奖惩","q":"等级制","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q204","group":"仪式与奖惩","q":"等级变了，称呼也跟着变","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q205","group":"仪式与奖惩","q":"想要一个打卡戳","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q206","group":"仪式与奖惩","q":"想要一张“今日任务卡”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q207","group":"角色与身份","q":"你更想当","opts":["被管的那个","管的那个","看情况","都不想"],"multi":false,"kind":"single","note":"单选"},{"id":"q208","group":"角色与身份","q":"你希望被当成","opts":["宠物","小孩","学生","犯人","病人","普通的人"],"multi":false,"kind":"single","note":"单选"},{"id":"q209","group":"角色与身份","q":"你希望对方被当成","opts":["主人","姐姐","老师","妈妈","医生","普通人"],"multi":false,"kind":"single","note":"单选"},{"id":"q210","group":"角色与身份","q":"希望有剧本","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q211","group":"角色与身份","q":"希望有台词","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q212","group":"角色与身份","q":"希望有专门的服装","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q213","group":"角色与身份","q":"希望被“检查”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q214","group":"角色与身份","q":"希望被“问话”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q215","group":"角色与身份","q":"希望被“教”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q216","group":"角色与身份","q":"希望被“用”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q217","group":"角色与身份","q":"希望被“照顾”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q218","group":"角色与身份","q":"希望被“罚”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q219","group":"角色与身份","q":"被叫宠物名","opts":["0 别叫","1 有点怪","2 一般","3 喜欢","4 很喜欢"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q220","group":"角色与身份","q":"用姿势表示身份","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q221","group":"角色与身份","q":"想要一个“入职”一样的开始","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q222","group":"角色与身份","q":"想要一个“毕业”一样的结束","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q223","group":"红线与安全","q":"绝对不能碰的地方","opts":["脖子","脸","耳朵","胸口","腰","哪里都不行"],"multi":true,"kind":"multi","note":"多选；一个都不选=没有禁区"},{"id":"q224","group":"红线与安全","q":"绝对不能说的话","opts":["骂家人","骂学校","说脏话","提过去的事","说不要我了"],"multi":true,"kind":"multi","note":"多选；不选=都可以"},{"id":"q225","group":"红线与安全","q":"绝对不能做的事","opts":["拍照","录像","留印子","绑住手","塞嘴","让别人知道"],"multi":true,"kind":"multi","note":"多选"},{"id":"q226","group":"红线与安全","q":"不能留印子的地方","opts":["脖子","脸","手腕","胸口","大腿","哪里都不行"],"multi":true,"kind":"multi","note":"多选"},{"id":"q227","group":"红线与安全","q":"不能让谁知道","opts":["室友","同学","家里人","老师","网上的人"],"multi":true,"kind":"multi","note":"多选"},{"id":"q228","group":"红线与安全","q":"上课的时候不做","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q229","group":"红线与安全","q":"喝了酒之后不做","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q230","group":"红线与安全","q":"情绪很差的时候不做","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q231","group":"红线与安全","q":"被逼着说“继续”","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q232","group":"红线与安全","q":"要不要安全词","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q233","group":"红线与安全","q":"安全词用哪种","opts":["一个词","一句话","一个动作","颜色（红黄绿）","不用"],"multi":false,"kind":"single","note":"单选"},{"id":"q234","group":"红线与安全","q":"说了停，多久内必须停","opts":["0 一秒都不能等","1 尽量马上停","2 可以缓冲一下","3 再撑十秒也行","4 由对方判断"],"multi":false,"kind":"scale","note":"0–4 分级"},{"id":"q235","group":"红线与安全","q":"允许对方判断你的极限","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q236","group":"红线与安全","q":"允许对方拒绝你","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q237","group":"红线与安全","q":"允许自己拒绝","opts":["想","不想","不知道"],"multi":false,"kind":"tri","note":"三态"},{"id":"q238","group":"红线与安全","q":"底线多久可以改","opts":["随时","一个月","三个月","定了就不改"],"multi":false,"kind":"single","note":"单选"},{"id":"q239","group":"红线与安全","q":"一个人做的时候怎么保证安全","opts":["告诉一个朋友","定个闹钟","不绑住手","不做太重的"],"multi":false,"kind":"single","note":"单选"},{"id":"q240","group":"红线与安全","q":"事后身体不舒服怎么办","opts":["先停几天","查一下再说","找人问","忍着"],"multi":false,"kind":"single","note":"单选"}],"papers":{"juan":[{"no":"卷一","name":"哪里不能碰","theme":"边界速查","minutes":4,"when":"第一次填；之后每月复检一次","count":18,"ids":["q001","q002","q003","q004","q005","q006","q007","q008","q009","q010","q011","q012","q013","q014","q015","q016","q017","q018"]},{"no":"卷二","name":"你叫什么","theme":"称呼与自称","minutes":3,"when":"第一次填；想换称呼的时候","count":16,"ids":["q019","q020","q021","q022","q023","q024","q025","q026","q027","q028","q029","q030","q031","q032","q033","q034"]},{"no":"卷三","name":"今天的身体","theme":"每日打卡","minutes":3,"when":"每天睡前；刚洗完澡最好填","count":18,"ids":["q035","q036","q037","q038","q039","q040","q041","q042","q043","q044","q045","q046","q047","q048","q049","q050","q051","q052"]},{"no":"卷四","name":"柜子里有什么","theme":"器具与道具","minutes":4,"when":"第一次填；买东西之前重填一次","count":18,"ids":["q053","q054","q055","q056","q057","q058","q059","q060","q061","q062","q063","q064","q065","q066","q067","q068","q069","q070"]},{"no":"卷五","name":"在哪里做","theme":"场景与环境","minutes":3,"when":"第一次填；换宿舍、放假回家之前","count":16,"ids":["q071","q072","q073","q074","q075","q076","q077","q078","q079","q080","q081","q082","q083","q084","q085","q086"]},{"no":"卷六","name":"你要一段什么样的关系","theme":"关系结构","minutes":4,"when":"第一次填；之后每月重填一次","count":16,"ids":["q087","q088","q089","q090","q091","q092","q093","q094","q095","q096","q097","q098","q099","q100","q101","q102"]},{"no":"卷七","name":"要多重","theme":"强度与节奏","minutes":4,"when":"第一次填；每次想加码之前","count":18,"ids":["q103","q104","q105","q106","q107","q108","q109","q110","q111","q112","q113","q114","q115","q116","q117","q118","q119","q120"]},{"no":"卷八","name":"一周排得下吗","theme":"频率与日程","minutes":3,"when":"开学、换课表、考试周之前；每周日晚上","count":17,"ids":["q121","q122","q123","q124","q125","q126","q127","q128","q129","q130","q131","q132","q133","q134","q135","q136","q137"]},{"no":"卷九","name":"结束之后","theme":"事后照顾","minutes":3,"when":"第一次填整卷；之后每次事后随机挑 3 题","count":16,"ids":["q138","q139","q140","q141","q142","q143","q144","q145","q146","q147","q148","q149","q150","q151","q152","q153"]},{"no":"卷十","name":"心里那点事","theme":"心理与情绪","minutes":4,"when":"每月一次；情绪不稳的那几天单独填","count":18,"ids":["q154","q155","q156","q157","q158","q159","q160","q161","q162","q163","q164","q165","q166","q167","q168","q169","q170","q171"]},{"no":"卷十一","name":"要不要留证据","theme":"记录与规则","minutes":4,"when":"第一次填；定规则、改规则的时候","count":17,"ids":["q172","q173","q174","q175","q176","q177","q178","q179","q180","q181","q182","q183","q184","q185","q186","q187","q188"]},{"no":"卷十二","name":"开场的规矩","theme":"仪式与奖惩","minutes":4,"when":"第一次填；之后每次开场前随机挑 2 题","count":18,"ids":["q189","q190","q191","q192","q193","q194","q195","q196","q197","q198","q199","q200","q201","q202","q203","q204","q205","q206"]},{"no":"卷十三","name":"你想演谁","theme":"角色与身份","minutes":4,"when":"第一次填；想换角色、换剧本的时候","count":16,"ids":["q207","q208","q209","q210","q211","q212","q213","q214","q215","q216","q217","q218","q219","q220","q221","q222"]},{"no":"卷十四","name":"哪里绝对不能碰","theme":"红线与安全","minutes":4,"when":"第一次填；每月；任何一次不舒服之后立刻重填","count":18,"ids":["q223","q224","q225","q226","q227","q228","q229","q230","q231","q232","q233","q234","q235","q236","q237","q238","q239","q240"]},{"no":"卷十五","name":"复检","theme":"跨组精选 20 题","minutes":5,"when":"每月最后一天；状态明显变了的时候","count":20,"ids":["q001","q002","q003","q004","q103","q104","q105","q106","q138","q139","q140","q141","q154","q155","q156","q157","q223","q224","q225","q226"]}],"combo":[{"name":"首晚三卷","papers":["卷一","卷二","卷十四"],"minutes":11,"note":"第一次用，先填这三卷；填完再谈别的","count":52,"ids":["q001","q002","q003","q004","q005","q006","q007","q008","q009","q010","q011","q012","q013","q014","q015","q016","q017","q018","q019","q020","q021","q022","q023","q024","q025","q026","q027","q028","q029","q030","q031","q032","q033","q034","q223","q224","q225","q226","q227","q228","q229","q230","q231","q232","q233","q234","q235","q236","q237","q238","q239","q240"]},{"name":"定契约前四卷","papers":["卷一","卷六","卷十一","卷十四"],"minutes":16,"note":"契约里的勾选项直接从这四卷的答案里抄","count":69,"ids":["q001","q002","q003","q004","q005","q006","q007","q008","q009","q010","q011","q012","q013","q014","q015","q016","q017","q018","q087","q088","q089","q090","q091","q092","q093","q094","q095","q096","q097","q098","q099","q100","q101","q102","q172","q173","q174","q175","q176","q177","q178","q179","q180","q181","q182","q183","q184","q185","q186","q187","q188","q223","q224","q225","q226","q227","q228","q229","q230","q231","q232","q233","q234","q235","q236","q237","q238","q239","q240"]},{"name":"每日快问","papers":["卷三"],"minutes":1,"note":"每天只抽 6 题，不要整卷；抽题种子用日期","count":6,"ids":["q035","q036","q037","q038","q039","q040"]},{"name":"事后三问","papers":["卷九"],"minutes":1,"note":"结束后立刻抽 3 题，只点不说话","count":3,"ids":["q138","q139","q140"]},{"name":"加码前检查","papers":["卷七","卷十四","卷九"],"minutes":4,"note":"任何一次想加难度，先过这三卷里的 12 题","count":12,"ids":["q103","q104","q105","q106","q223","q224","q225","q226","q138","q139","q140","q141"]}]},"contract":[["前置","不勾也生效",["双方成年。","说停就停，不需要理由，也不会被追问。"]],["一 · 归属","勾几条算几条",["从签下这一刻起，我的身体怎么用、什么时候用，由你安排。","每天第一次联系时，我先报今天的身体状态，再听安排。","没有你的允许，我不自己碰自己。","你给的任务，做完要报，做不完也要报，不瞒。","我的称呼由你定，你说换我就换。","身上留什么印子、留多久，由你定 —— 但不能越过第四节。"]],["二 · 保留","这一节只能加，不能删",["我随时可以说停，说停就停。","我可以说「不」。拒绝一次不算违约，也不会被记账。","发烧、受伤、身体不舒服，立刻停，不用请示。","考试周、家里有事，可以暂停，提前一天说一声就行。","我可以退出，提前一天说。","不拍照、不录像。","手机、账号、钱，不归这段关系管。","我有权在事后说「这次不好」，说了就改，不追问理由。"]],["三 · 记录","",["每次做完，我记一条：日期、做了什么、身体什么反应。","记录只给你看，不给第三个人。","每周日晚上，我把这一周整理成一条。","你可以在记录上写批注，批注也算指令。","这段关系结束后，记录我可以全部删掉，你不留副本。"]],["四 · 禁区","勾了就是绝对不做",["不留看得见的印子。","不拍照、不录像。","不让第三个人知道。","上课、实习、家里人在的时候不做。","出血、头晕、喘不上气、手脚发麻 —— 立刻停，这次不算数，也不算违约。","不用来路不明的东西，不用会卡住、会疼很久的东西。","不拿「不要你了」当话讲。"]],["五 · 期限","",["这一段先定 7 / 30 / 90 / 一学期（圈一个）。","到期自动失效，要续得重新签一遍。","中间可以随时喊停，不用等到期。","每次续签之前，把整份契约从头读一遍，划掉不要的。"]],["六 · 违约","",["违反了，我自己说出来，不隐瞒。","自己说出来的，罚减半；被查出来的，罚加倍。","罚只能用勾过的方式，不许临时加。","罚完就结束，不翻旧账，不拿到下一次说。","连续三次违约，暂停一周，重新谈。","罚的时候我也能喊停。"]],["七 · 落款","",["我签之前把每一条都读过了。","我签的时候没有被催、没有被威胁、没有喝酒。","我知道我随时可以撕掉它。"]]]};
+const Q = {}; D.q.forEach(x => Q[x.id] = x);
+const A = JSON.parse(localStorage.getItem("ans") || "{}");
+const C = JSON.parse(localStorage.getItem("con") || "[]");
+let NO = localStorage.getItem("no");
+let cur = null, idx = 0, tick = {};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const save = () => { localStorage.setItem("ans", JSON.stringify(A)); localStorage.setItem("con", JSON.stringify(C)); };
+
+function show(id){
+  document.querySelectorAll(".s").forEach(x => x.classList.remove("on"));
+  $(id).classList.add("on");
+  window.scrollTo(0,0);
+}
+function backHome(){ renderHome(); show("s-home"); }
+
+/* ───── 首页 ───── */
+function renderHome(){
+  $("home-no").textContent = NO ? ("编号 " + NO) : "还没有编号";
+  $("combo").innerHTML = D.papers.combo.map((c,i) =>
+    `<button onclick="openCombo(${i})"><div class="paper"><span class="t">${esc(c.name)}</span><span class="m">${c.count} 题 · ${c.minutes} 分</span></div></button>`
+  ).join("");
+  $("papers").innerHTML = D.papers.juan.map((j,i) => {
+    const n = j.ids.filter(id => A[id] !== undefined).length;
+    const cls = n >= j.count ? "done" : "";
+    return `<button class="${cls}" onclick="openPaper(${i})"><div class="paper">
+      <span class="n">${esc(j.no)}</span>
+      <span class="t">${esc(j.name)}</span>
+      <span class="m">${n}/${j.count}</span></div></button>`;
+  }).join("");
+}
+
+/* ───── 答题 ───── */
+function openPaper(i){
+  const j = D.papers.juan[i];
+  cur = {no: j.no, name: j.name, ids: j.ids.slice()};
+  idx = 0; renderQ();
+}
+function openCombo(i){
+  const c = D.papers.combo[i];
+  cur = {no: c.name, name: "", ids: c.ids.slice()};
+  idx = 0; renderQ();
+}
+function renderQ(){
+  if(idx >= cur.ids.length){ cur = null; backHome(); return; }
+  const q = Q[cur.ids[idx]];
+  $("q-no").textContent = cur.no;
+  $("q-prog").textContent = (idx+1) + " / " + cur.ids.length;
+  $("q-text").textContent = q.q;
+  const chosen = A[q.id];
+  const multi = q.kind === "multi";
+  $("q-opts").innerHTML = q.opts.map((o,k) => {
+    const on = multi ? Array.isArray(chosen) && chosen.includes(o) : chosen === o;
+    return `<button class="${on ? "sel" : ""}" onclick="pickOpt(${k})">${esc(o)}</button>`;
+  }).join("");
+  $("q-next").style.display = multi ? "block" : "none";
+}
+function pickOpt(k){
+  const q = Q[cur.ids[idx]];
+  const o = q.opts[k];
+  if(q.kind === "multi"){
+    let arr = Array.isArray(A[q.id]) ? A[q.id].slice() : [];
+    arr = arr.includes(o) ? arr.filter(x => x !== o) : arr.concat([o]);
+    A[q.id] = arr;
+    save(); renderQ();
+  } else {
+    A[q.id] = o; save();
+    const btn = $("q-opts").children[k];
+    if(btn) btn.classList.add("sel");
+    nextQ();
+  }
+}
+function nextQ(){ idx++; renderQ(); }
+
+/* ───── 契约 ───── */
+let flat = [];
+function openContract(){
+  flat = [];
+  let h = "";
+  D.contract.forEach(([title, sub, items]) => {
+    h += `<h2>${esc(title)}${sub ? "<span>" + esc(sub) + "</span>" : ""}</h2>`;
+    items.forEach(t => {
+      const i = flat.length; flat.push(t);
+      const on = C.includes(i);
+      h += `<div class="chk ${on?"on":""}" data-i="${i}" onclick="toggleC(${i})"><div class="box"></div><div>${esc(t)}</div></div>`;
+    });
+  });
+  $("contract").innerHTML = h;
+  const sig = JSON.parse(localStorage.getItem("sig") || "null");
+  if(sig) $("sig").value = sig.name || "";
+  show("s-contract");
+}
+function toggleC(i){
+  const p = C.indexOf(i);
+  if(p >= 0) C.splice(p,1); else C.push(i);
+  save();
+  const el = document.querySelector('.chk[data-i="' + i + '"]');
+  if(el) el.classList.toggle("on", C.includes(i));
+}
+function signIt(){
+  const nm = $("sig").value.trim();
+  if(!nm){ $("sig").focus(); return; }
+  if(!NO){ NO = String(Math.floor(Math.random()*900)+100); localStorage.setItem("no", NO); }
+  const at = new Date().toLocaleString("zh-CN", {hour12:false});
+  localStorage.setItem("sig", JSON.stringify({name:nm, at:at, no:NO, n:C.length}));
+  $("d-no").textContent = NO;
+  $("d-sig").textContent = nm + "　·　" + at + "　·　勾了 " + C.length + " 条";
+  show("s-done");
+}
+
+/* ───── 导出 ───── */
+function exportJSON(){
+  const payload = {
+    no: NO,
+    sig: JSON.parse(localStorage.getItem("sig") || "null"),
+    answered: Object.keys(A).length,
+    answers: Object.fromEntries(Object.entries(A).map(([k,v]) => [k, {q: Q[k] ? Q[k].q : "", a: v}])),
+    contract: C.map(i => flat[i]).filter(Boolean),
+    at: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "intake-" + (NO || "000") + ".json";
+  a.click();
+}
+function wipe(){
+  if(!confirm("全部清掉？记录会没。")) return;
+  localStorage.clear(); location.reload();
+}
+
+renderHome();
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+</script>
+</body>
+</html>
