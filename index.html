@@ -145,12 +145,12 @@ function renderHome(){
 function openPaper(i){
   const j = D.papers.juan[i];
   cur = {no: j.no, name: j.name, ids: j.ids.slice()};
-  idx = 0; renderQ();
+  idx = 0; renderQ(); show("s-quiz");
 }
 function openCombo(i){
   const c = D.papers.combo[i];
   cur = {no: c.name, name: "", ids: c.ids.slice()};
-  idx = 0; renderQ();
+  idx = 0; renderQ(); show("s-quiz");
 }
 function renderQ(){
   if(idx >= cur.ids.length){ cur = null; backHome(); return; }
