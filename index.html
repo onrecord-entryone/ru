@@ -51,6 +51,16 @@ h2 span{color:var(--dim);font-size:12px;letter-spacing:.1em;margin-left:8px}
 </head>
 <body>
 
+<!-- 门 -->
+<section id="s-gate" class="s">
+  <div style="height:22vh"></div>
+  <p class="c w" style="letter-spacing:.5em">暗 号</p>
+  <input type="text" id="gate-in" inputmode="numeric" maxlength="8" autocomplete="off"
+         style="letter-spacing:.6em;font-size:24px;margin-top:26px">
+  <button class="go" onclick="checkGate()">进</button>
+  <p class="c w" id="gate-err" style="color:#a8323c;min-height:1.6em;margin-top:14px"></p>
+</section>
+
 <!-- 首页 -->
 <section id="s-home" class="s on">
   <div style="height:8vh"></div>
@@ -64,6 +74,7 @@ h2 span{color:var(--dim);font-size:12px;letter-spacing:.1em;margin-left:8px}
   <div class="bar"></div>
   <button onclick="openContract()">契 约</button>
   <button onclick="exportJSON()">导出这一份</button>
+  <button class="q" onclick="lockUp()">锁 上</button>
   <button class="q" onclick="wipe()">全部清掉</button>
 </section>
 
@@ -76,6 +87,7 @@ h2 span{color:var(--dim);font-size:12px;letter-spacing:.1em;margin-left:8px}
   <p class="big" id="q-text" style="margin:18px 0 24px"></p>
   <div id="q-opts"></div>
   <button class="q" id="q-next" style="display:none" onclick="nextQ()">下 一 题</button>
+  <button class="q" id="q-prev" onclick="prevQ()">上 一 题</button>
   <button class="q" onclick="backHome()">回去</button>
 </section>
 
@@ -182,6 +194,10 @@ function pickOpt(k){
   }
 }
 function nextQ(){ idx++; renderQ(); }
+function prevQ(){
+  if(idx > 0){ idx--; renderQ(); }
+  else { backHome(); }
+}
 
 /* ───── 契约 ───── */
 let flat = [];
@@ -241,6 +257,36 @@ function wipe(){
 }
 
 renderHome();
+
+/* ───── 暗号门 ───── */
+const GATE_HASH = "158a323a7ba44870f23d96f1516dd70aa48e9a72db4ebb026b0a89e212a208ab";
+async function sha256(s){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+async function checkGate(){
+  const v = $("gate-in").value.trim();
+  const h = await sha256(v);
+  if(h === GATE_HASH){
+    localStorage.setItem("gate", "1");
+    enter();
+  } else {
+    $("gate-err").textContent = "不对。";
+    $("gate-in").value = "";
+  }
+}
+function lockUp(){
+  localStorage.removeItem("gate");
+  $("gate-in").value = "";
+  $("gate-err").textContent = "";
+  show("s-gate");
+}
+function enter(){
+  renderHome();
+  show("s-home");
+}
+
+if(localStorage.getItem("gate") === "1"){ enter(); } else { show("s-gate"); }
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 </script>
 </body>
